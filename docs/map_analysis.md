@@ -37,3 +37,20 @@ Students should explain the Big-O of:
 - `values`
 
 The expected design is a clear, well-explained mapping abstraction that makes trade-offs explicit.
+
+## Chosen design: sorted vector
+`Map` stores key-value pairs in a `std::vector` ordered by key. Insertion uses binary search to find the position, rejects an existing key, and inserts at that position. Lookup also uses binary search. Keeping the vector sorted makes key listing deterministic and allows `isSorted()` to verify the invariant.
+
+For `n` entries, the operation costs are:
+
+| Operation | Best case | Worst case | Reason |
+| --- | --- | --- | --- |
+| `insert` | O(log n) | O(n) | Binary search locates the position; vector elements may need to shift, and growth may reallocate. |
+| `contains` | O(1) | O(log n) | Binary search can find the middle entry immediately or narrow the search logarithmically. |
+| `update` | O(1) | O(log n) | Binary search locates the key; changing its integer value is O(1). |
+| `erase` | O(1) | O(n) | Binary search can locate the key immediately; vector elements after the removed entry may shift left. |
+| `at` | O(1) | O(log n) | Binary search locates the key; a missing key throws `std::out_of_range`. |
+| `keys` | O(n) | O(n) | Each stored key is copied into the returned vector. |
+| `values` | O(n) | O(n) | Each stored value is copied into the returned vector. |
+
+The map uses O(n) storage, plus vector capacity and the stored strings. `keys()` and `values()` each allocate O(n) additional storage for their result. A hash table could offer average-case O(1) lookup, but it requires bucket storage, has no natural sorted order, and may degrade to O(n) lookup in the worst case. The sorted vector is a compact, straightforward choice for this lab, with fast lookup and deterministic traversal at the cost of linear-time insertion and deletion in the worst case.
